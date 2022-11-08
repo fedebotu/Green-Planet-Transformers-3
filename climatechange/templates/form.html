@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>About Flask</title>
+  </head>
+  <body>
+    <body>
+        {% extends "template.html" %}
+        <nav>
+            <a href="{{ url_for('index') }}">FlaskApp</a>
+            <a href="#">About</a>
+        </nav>
+        <hr>
+  
+  
+
+        <div class="content">
+            {% block content %} 
+            <h1>{% block title %} Messages {% endblock %}</h1>
+            {% for message in messages %}
+                <div class='message'>
+                    <h3>{{ message['title'] }}</h3>
+                    <p>{{ message['content'] }}</p>
+                </div>
+            {% endfor %}
+
+
+            {% endblock %}
+        </div>
+    </body>
+    
+  </body>
+</html>

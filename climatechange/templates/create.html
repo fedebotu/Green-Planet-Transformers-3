@@ -1,0 +1,26 @@
+{% extends 'template.html' %}
+
+{% block content %}
+    <h1>{% block title %} Enter your city to know the weather conditions {% endblock %}</h1>
+    <form method="post">
+        <label for="title">City Name</label>
+        <br>
+        <input type="text" name="title"
+               placeholder="Message title"
+               value="{{ request.form['title'] }}"></input>
+        <br>
+<!--
+        <label for="content">Message Content</label>
+        <br>
+        <textarea name="content"
+                  placeholder="Message content"
+                  rows="15"
+                  cols="60"
+                  >{{ request.form['content'] }}</textarea>
+        <br>
+-->
+<br>
+<br>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}

@@ -66,9 +66,8 @@ def get_weather_data(weather_data_dir, lat, lon):
 def plot_weather_time_series(time_series):
     u, v, temp = time_series[8], time_series[12], time_series[4]
 
-    # set font latex
-    plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
+    
     # 16 font size
     plt.rcParams.update({'font.size': 18})
 

@@ -108,6 +108,7 @@ def geocode(    city=None,
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
 
+
 ########  Part 3: get the weather forecast
 
 data_dir = Path('./data/era5/')

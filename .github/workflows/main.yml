@@ -15,4 +15,3 @@ jobs:
     - name: Lint
       run: |
         make ci
-Footer

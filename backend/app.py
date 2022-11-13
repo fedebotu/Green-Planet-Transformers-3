@@ -84,7 +84,7 @@ def get_closest_pixel(lat, lon, lats=lats, longs=longs):
 
 lat_idx, lon_idx = get_closest_pixel(lat, lon)
 
-data_dir = Path('./data/era5/')
+data_dir = Path('../data/era5/')
 
 # Open h5py file
 f = h5py.File(data_dir / 'sample.h5', 'r')
@@ -100,11 +100,8 @@ prompt = ''
 
 for var in f.keys():
     # add to prompt with value
-    if var in ['u10', 'v10', 't2m', 'r850', 'sp', 'mslp', 't850', 'u1000', \
-        'v1000', 'z1000', 'u850', 'v850', 'z850', 'u500', 'v500', 'z500', 't500', \
-            'z50', 'r500', 'tcwv', 'sst']:
+    if var in ['u10', 'v10', 't2m', 'tpp', 'r850']:
         prompt += f[var].attrs['description'] + " is: {:.2f} \n".format(f[var][0, lat_idx, lon_idx])
-
 
 final_prompt = prompt + f"\n Given the above information, {original_question}"
 
@@ -176,4 +173,4 @@ image = plt.imread("../assets/earth.png")
 
 # st.text(f"{text}")
 
-st.text(f"Weather data found: {prompt}, Coordinates: {lat}, {lon}")
+st.text(f"Weather data found: {prompt}")

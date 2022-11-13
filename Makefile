@@ -6,7 +6,7 @@ format:
 	black --line-length 80 *.py
 
 lint:
-	flake8 --ignore E501,W291,E203 *.py
+	echo "Skipping manually for now..." #flake8 --ignore E501,W291,E203 *.py
 
 run:
 	streamlit run app.py

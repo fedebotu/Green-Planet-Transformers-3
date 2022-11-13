@@ -25,6 +25,11 @@ s
 
 If you encounter issues when installing `pyaudio`, run the following: `sudo apt install portaudio19-dev`.
 
+#### Example Qs to ask MelXior
+
+* I wanted to go to X tomorrow. Will it rain there?
+* I wanted to go to X tomorrow. Can I wear a t-shirt?
+* I wanted to go to X tomorrow. Can I bike there?
 
 <span class="caption">Example from FourCastNet data</span>
 <div align="center">

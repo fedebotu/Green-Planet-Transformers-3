@@ -1,5 +1,7 @@
 # ERA5 Dataset
 
+`single_week.h5` contains single week data we can use for our project: this is data from `fourcastnet`. It is historical data (Nov 2018) since ERA5 is not available in a preprocessed format in real time.
+
 ## Data
 
 We use the data from the [FOURCASTNET paper](https://arxiv.org/abs/2202.11214) downloaded from the [Copernicus insitute](https://cds.climate.copernicus.eu/). The data is as follows:
@@ -12,6 +14,8 @@ We use the data from the [FOURCASTNET paper](https://arxiv.org/abs/2202.11214) d
 | 500hPa     | T, U, V, Z, RH          |
 | 50hPa      | Z                       |
 | Integrated | TCWV                    |
+
+> Note: there is also the extra variable of `tp` (total precipitation) included in the H5 files, although it has a slightly different format.
 
 These are downloaded from 2 datasets:
 

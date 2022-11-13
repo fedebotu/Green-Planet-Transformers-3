@@ -3,3 +3,4 @@ openai
 black
 flake8
 streamlit
+transformers

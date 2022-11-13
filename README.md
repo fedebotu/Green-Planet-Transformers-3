@@ -1,5 +1,7 @@
 # Green Planet Transformers 3
 
+[![build](https://github.com/fedebotu/Green-Planet-Transformers-3/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/fedebotu/Green-Planet-Transformers-3/actions/workflows/main.yml)
+
 Repository for OpenAI's Climate Hackathon
 
 ## Links 

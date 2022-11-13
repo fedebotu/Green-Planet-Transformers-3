@@ -7,6 +7,8 @@ import numpy as np
 import h5py
 import openai
 
+from backend.brian import fetch_brian
+
 
 # [MP] this should probably be a script argument
 openai.api_key = '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' 
@@ -156,20 +158,14 @@ weather_explainer = weather_explainer['choices'][0]['text']
 
 ########  Part 4: return audio and weather information
 
-st.write(f"")
-
-def fetch_brian(session, text):
-    url = f"https://api.streamelements.com/kappa/v2/speech?voice=Brian&text={text}"
-    response = session.get(url)
-    return response.content
-
 session = requests.Session()
 
-audio = fetch_brian(session, weather_explainer + response)
+
+audio = fetch_brian(session, weather_explainer + response, funny_mode=True)
 st.audio(audio, format="audio/wav")
 
 # load and display image
-image = plt.imread("../assets/earth.png")
+image = plt.imread("./assets/earth.png")
 
 # # display text in text box
 # st.title("Text Box")

@@ -11,7 +11,14 @@ Repository for OpenAI's Climate Hackathon
 If you encounter issues when installing `pyaudio`, run the following: `sudo apt install portaudio19-dev`.
 
 
-<p align="center">
-  <img src="assets/rh.gif" alt="animated" />
-  <em>Example from FourCastNet data</em>
-</p>
+<span class="caption">Example from FourCastNet data</span>
+<div align="center">
+  <img src="assets/rh.gif" alt="animated"/>
+</div>
+
+- - -
+
+
+<div align="center">
+<img src="assets/earth.png" alt="drawing" width="25%"/>
+</div>

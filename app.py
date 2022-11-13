@@ -8,7 +8,7 @@ import h5py
 import openai
 
 from backend.brian import fetch_brian
-
+from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
 
 # [MP] this should probably be a script argument
 openai.api_key = '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' 
@@ -44,7 +44,6 @@ response = openai.Completion.create(
 loc = response['choices'][0]['text']
 
 st.write(f"I think you are asking about: {loc}")
-# [MP] Sometimes GPT responds 
 city, state, country = loc.split(",")
 
 
@@ -72,48 +71,16 @@ lat, lon = data['lat'], data['lon']
 
 ########  Part 3: get the weather forecast
 
-lats = np.linspace(90, -90, 721)
-longs = np.linspace(-180, 180, 1440)
-
-def get_closest_pixel(lat, lon, lats=lats, longs=longs):
-    """
-    Given a latitude and longitude, return the closest pixel
-    Get the closest pixel (best way would be to interpolate - TODO)
-    """
-    lat_idx = np.argmin(np.abs(lats - lat))
-    long_idx = np.argmin(np.abs(longs - (lon + 180)))
-    return lat_idx, long_idx
-
-lat_idx, lon_idx = get_closest_pixel(lat, lon)
-
 data_dir = Path('./data/era5/')
-
-# Open h5py file
-f = h5py.File(data_dir / 'sample.h5', 'r')
-u = f['u10'][0]
-v = f['v10'][0]
-temp = f['t2m'][0]
-
-u_sf = u[lat_idx, lon_idx]
-v_sf = v[lat_idx, lon_idx]
-temp_sf = temp[lat_idx, lon_idx]
-
-prompt = ''
-
-for var in f.keys():
-    # add to prompt with value
-    if var in ['u10', 'v10', 't2m', 'r850', 'sp', 'mslp', 't850', 'u1000', \
-        'v1000', 'z1000', 'u850', 'v850', 'z850', 'u500', 'v500', 'z500', 't500', \
-            'z50', 'r500', 'tcwv', 'sst']:
-        prompt += f[var].attrs['description'] + " is: {:.2f} \n".format(f[var][0, lat_idx, lon_idx])
+raw_variables, time_series = get_weather_data(data_dir, lat, lon)
 
 
-final_prompt = prompt + f"\n Given the above information, {original_question}"
+final_prompt = raw_variables + f"\n Given the above information, {original_question}"
 
 response = openai.Completion.create(
     model="text-davinci-002",
     prompt=final_prompt,
-    temperature=0.4,
+    temperature=0,
     max_tokens=1000,
     top_p=1,
     frequency_penalty=0,
@@ -123,23 +90,23 @@ response = openai.Completion.create(
 
 response = response['choices'][0]['text']
 
-prompt_explainer = f"{prompt} {response} Why is this true?"
+prompt_explainer = f"{raw_variables} {response} Why is this true?"
 
 response_explainer = openai.Completion.create(
     model="text-davinci-002",
     prompt=response,
-    temperature=0.4,
+    temperature=0,
     max_tokens=1000,
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0,
-    stop=[" Human:", " AI:"] #\n
+    stop=[" Human:", " AI:"] 
 )
 
 response_explainer = response_explainer['choices'][0]['text']
 
 
-weather_explainer = f"{prompt}. What can we say about the weather given the above information?"
+weather_explainer = f"{raw_variables}. What can we say about the weather given the above information?"
 
 weather_explainer = openai.Completion.create(
     model="text-davinci-002",
@@ -164,12 +131,11 @@ session = requests.Session()
 audio = fetch_brian(session, weather_explainer + response, funny_mode=True)
 st.audio(audio, format="audio/wav")
 
-# load and display image
+
 image = plt.imread("./assets/earth.png")
+fig = plot_weather_time_series(time_series)
 
-# # display text in text box
-# st.title("Text Box")
 
-# st.text(f"{text}")
-
-st.text(f"Weather data found: {prompt}, Coordinates: {lat}, {lon}")
+st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
+st.image(image, caption="MelXior")

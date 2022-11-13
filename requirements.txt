@@ -1,2 +1,5 @@
 h5py
 openai
+black
+flake8
+streamlit

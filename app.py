@@ -11,9 +11,10 @@ import h5py
 import openai
 
 from backend.brian import fetch_brian
-from backend.weather import get_better_weather_data, plot_weather_time_series
+from backend.weather import get_better_weather_data, get_weather_data
 from backend.geoloc import geocode, reverse_geocode, get_timezone, parse_location
 from backend.dalle import generate_illustration
+from backend.plotting import plot_weather_time_series, interactive_plot
 
 
 # [MP] this should probably be a script argument
@@ -104,7 +105,7 @@ except:
 
 
 st.write(f"Location: {loc},   Time: {hours} hours in the future")
-st.write(f"Current datetime: {current_time, current_date}")
+# st.write(f"Current datetime: {current_time, current_date}")
 
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
@@ -131,20 +132,6 @@ response = openai.Completion.create(
 
 response = response['choices'][0]['text'].strip()
 
-# prompt_explainer = f"{raw_variables} {response} Why is this true?"
-
-# response_explainer = openai.Completion.create(
-#     model="text-davinci-002",
-#     prompt=response,
-#     temperature=0,
-#     max_tokens=1000,
-#     top_p=1,
-#     frequency_penalty=0,
-#     presence_penalty=0,
-#     stop=[" Human:", " AI:"]
-# )
-
-# response_explainer = response_explainer['choices'][0]['text'].strip()
 
 
 weather_explainer = f"{raw_variables}. Summarize the weather. What should you wear? How should you prepare? Based on the weather, is it better to walk, bike, drive or take public transportation?"
@@ -185,9 +172,13 @@ st.subheader("Weather predictions")
 image = plt.imread("./assets/earth.png")
 fig = plot_weather_time_series(time_series)
 
-st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+st.pyplot(fig=fig, clear_figure=True)
+
+st.subheader("Precipitation forecast")
+st.pydeck_chart(interactive_plot(lat, lon))
+
 st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
-#st.image(image, caption="MelXior", width=400) As we are using Part 5, we dont need this image
+        #st.image(image, caption="MelXior", width=400) As we are using Part 5, we dont need this image
 
 ## Part 5 Generate the weather summary again (add city to the prompt) using GPT3 and return an image from Dalle
 prompt = f"{weather_explainer} in the city of {city}. Summarize this."
@@ -202,4 +193,6 @@ call_dalle_prompt = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 url = generate_illustration(call_dalle_prompt['choices'][0]['text'].strip())
-st.image(url,width=400)
+
+# center the image
+st.image(url, caption=f"An artistic representation of {loc} by OpenAI's Dall-E")

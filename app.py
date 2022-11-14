@@ -12,7 +12,7 @@ from backend.weather import get_closest_pixel, get_weather_data, plot_weather_ti
 from backend.dalle import generate_illustration
 
 # [MP] this should probably be a script argument
-openai.api_key = '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' 
+openai.api_key = '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'
 
 
 ######## Part 1: real-time audio (question) to text.
@@ -24,7 +24,7 @@ original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon 
 
 ######## Part 2: text to text (identify location).
 
-# [MP] We need a robust way to filter the question and extract the location. 
+# [MP] We need a robust way to filter the question and extract the location.
 # For now, we'll assume the query is about a location in the US.
 context = original_question
 prompt = f"{original_question} Ignore the previous question. \
@@ -48,20 +48,20 @@ st.write(f"I think you are asking about: {loc}")
 city, state, country = loc.split(",")
 
 
-# Get the coordinates 
+# Get the coordinates
 API_KEY = "e83b3c4c08285bf87b99f9bbc0abe3f0" # need to wait for activation
 
-def geocode(    city=None, 
-                state=None, 
-                country_code=None, 
-                limit=5, 
+def geocode(    city=None,
+                state=None,
+                country_code=None,
+                limit=5,
                 api_key=API_KEY):
     """
     Given a city, state, and country, return the latitude and longitude and other data
     """
 
     url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
-    
+
     # get the response
     response = requests.get(url)
     data = eval(response.text)[0]
@@ -73,7 +73,7 @@ lat, lon = data['lat'], data['lon']
 ########  Part 3: get the weather forecast
 
 data_dir = Path('./data/era5/')
-raw_variables, time_series = get_weather_data(data_dir, lat, lon)
+raw_variables, time_series, time_series_str = get_weather_data(data_dir, lat, lon)
 
 
 final_prompt = raw_variables + f"\n Given the above information, {original_question}"
@@ -101,7 +101,7 @@ response_explainer = openai.Completion.create(
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0,
-    stop=[" Human:", " AI:"] 
+    stop=[" Human:", " AI:"]
 )
 
 response_explainer = response_explainer['choices'][0]['text']
@@ -134,7 +134,7 @@ st.audio(audio, format="audio/wav")
 
 
 image = plt.imread("./assets/earth.png")
-fig = plot_weather_time_series(time_series)
+# fig = plot_weather_time_series(time_series)
 
 
 st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)

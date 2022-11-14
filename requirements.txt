@@ -6,3 +6,8 @@ streamlit
 transformers
 timezonefinder
 pytz
+matplotlib
+pydeck
+nltk
+tenacity
+gdown

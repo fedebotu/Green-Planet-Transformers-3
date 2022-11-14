@@ -28,31 +28,36 @@ build_dir = os.path.join(parent_dir, "streamlit_audio_recorder/st_audiorec/front
 
 # [MP] Placeholder
 st.title("Ask MelXior a weather question!")
-original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow. Will it rain there?")
-
+original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow at 10 AM. Will it rain?")
 
 ######## Part 2: text to text (identify location).
 loc = prompt_location_from_user_input(original_question)
 city, state, country_code = parse_location(loc)
 data = geocode(city=city, state=state, country_code=country_code)
-lat, lon = data['lat'], data['lon']
 
-# Get the coordinates
-current_time = get_currenttime(lat, lon)
+# Get the coordinates and time
+lat, lon = data['lat'], data['lon']
+timezone = get_timezone(lat, lon)
+
+cur = datetime.now(pytz.timezone(timezone))
+current_date = cur.strftime("%Y-%m-%d")
+current_time = cur.strftime("%I:%M %p")
+# current_time = get_currenttime(lat, lon)
+
 context = original_question
-prompt = f"{original_question} Ignore the previous question. \
-    Given that it is now {current_time}, How many hours in the future does the above refer to? \
-    Respond with number of hours"
+prompt = f"""The hour right now is {current_time}.
+    {original_question} How many hours from now does my question refer to?"""
 response = default_prompt(prompt)
 
-hours = response['choices'][0]['text'][2:]
+hours = response['choices'][0]['text'].strip()
 try:
     hours = int(re.findall(r'\d+', hours)[0])
 except:
     hours = 0
 
-st.write(f'{current_time}')
 st.write(f"Location: {loc},   Time: {hours} hours in the future")
+st.write(f"Current datetime: {current_time, current_date}")
+
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
 
@@ -62,10 +67,10 @@ raw_variables, time_series, time_series_str = get_weather_data(data_dir, lat, lo
 
 final_prompt = raw_variables + f"\n Given the above information, {original_question}"
 response = default_prompt(final_prompt)
-response = response['choices'][0]['text']
+response = response['choices'][0]['text'].strip()
 
 prompt_explainer = f"{raw_variables} {response} Why is this true?"
-response_explainer = default_prompt(prompt_explainer)
+response_explainer = default_prompt(prompt_explainer).strip()
 response_explainer = response_explainer['choices'][0]['text']
 
 weather_explainer = f"{time_series_str}. What can we say about the weather given the above information? What should you wear? How should you prepare? Based on the weather, should you walk, bike, drive or take public transportation?"
@@ -79,12 +84,14 @@ weather_explainer = openai.Completion.create(
     presence_penalty=0,
     stop=[" Human:", " AI:"] #\n
 )
-weather_explainer = weather_explainer['choices'][0]['text']
+
+weather_explainer = weather_explainer['choices'][0]['text'].strip()
 
 ########  Part 4: return audio and weather information
 session = requests.Session()
 
 funny_mode = "funny meme" in original_question.lower()
+
 
 audio = fetch_brian(session, weather_explainer + response, funny_mode=funny_mode)
 st.audio(audio, format="audio/wav")

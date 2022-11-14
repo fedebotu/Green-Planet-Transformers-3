@@ -1,6 +1,9 @@
 from pathlib import Path
 import requests
+import pytz
+from datetime import datetime
 
+import re
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +12,8 @@ import openai
 
 from backend.brian import fetch_brian
 from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
+from backend.geoloc import geocode, reverse_geocode, get_timezone
+
 
 # [MP] this should probably be a script argument
 openai.api_key = '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'
@@ -41,7 +46,8 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-loc = response['choices'][0]['text']
+# [MP] ignore newlines at the start
+loc = response['choices'][0]['text'][2:]
 
 ## setting default location, when it is not specific
 if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
@@ -63,7 +69,7 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
         stop=[" Human:", " AI:"] #\n
     )
 
-    loc = response['choices'][0]['text']
+    loc = response['choices'][0]['text'][2:]
 
 
 def parse_location(loc):
@@ -85,10 +91,13 @@ def parse_location(loc):
             _, loc = loc.split("The city is")
             city, loc = loc.split(", the state is")
             state, country_code = loc.split(", and the country is the")
+        except: pass
     return city, state, country_code
 
 city, state, country_code = parse_location(loc)
 
+data = geocode(city=city, state=state, country_code=country_code)
+lat, lon = data['lat'], data['lon']
 
 # Get the coordinates
 API_KEY = "e83b3c4c08285bf87b99f9bbc0abe3f0" # need to wait for activation
@@ -113,6 +122,39 @@ def geocode(    city=None,
     response = requests.get(url)
     data = eval(response.text)[0]
     return data
+
+# Extract time
+timezone = get_timezone(lat, lon)
+
+current_time = datetime.now(pytz.timezone(timezone))
+current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+context = original_question
+prompt = f"{original_question} Ignore the previous question. \
+    Given that it is now {current_time}, How many hours in the future does the above refer to? \
+    Respond with number of hours"
+
+response = openai.Completion.create(
+    model="text-davinci-002",
+    prompt=prompt,
+    temperature=0,
+    max_tokens=1000,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=[" Human:", " AI:"] #\n
+)
+
+hours = response['choices'][0]['text'][2:]
+try:
+    hours = int(re.findall(r'\d+', hours)[0])
+except:
+    hours = 0
+
+
+st.write(f'{current_time}')
+st.write(f"Location: {city}, {state}, {country_code} ,   Time: {hours} hours in the future")
 
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
@@ -176,8 +218,9 @@ weather_explainer = weather_explainer['choices'][0]['text']
 
 session = requests.Session()
 
+funny_mode = "funny meme" in original_question.lower()
 
-audio = fetch_brian(session, weather_explainer + response, funny_mode=True)
+audio = fetch_brian(session, weather_explainer + response, funny_mode=funny_mode)
 st.audio(audio, format="audio/wav")
 
 
@@ -185,6 +228,6 @@ image = plt.imread("./assets/earth.png")
 fig = plot_weather_time_series(time_series)
 
 
-st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+# st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
 st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
 st.image(image, caption="MelXior")

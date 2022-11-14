@@ -4,3 +4,5 @@ black
 flake8
 streamlit
 transformers
+timezonefinder
+pytz

@@ -1,14 +1,20 @@
-# Green Planet Transformers 3
+# MelXior Neural Weather App 🌤
 
 [![build](https://github.com/fedebotu/Green-Planet-Transformers-3/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/fedebotu/Green-Planet-Transformers-3/actions/workflows/main.yml)
 
-Repository for OpenAI's Climate Hackathon :>>>>>**TODO**<<<<<<: description
+Repository for OpenAI's Climate Hackathon **Green-Planet-Tranformers-3**'s team, in alphabetical order: [Federico Berto](https://fedebotu.github.io/), [Jared Fernandez](https://www.jaredfern.com/), [Michael Poli](https://zymrael.github.io/), [Sarthak Arora](https://sarthakvarora.github.io/) and [Sumedha Khatter](https://www.linkedin.com/in/skhatter/)
 
 
-## How does it work?
+## MelXior
+### Motivation
+> One of the biggest problems in solving a problem like Climate Change is the lack of the awareness about the problem. People have very minuscule knowledge about this problem and thus we are trying to build a solution that can help in creating awareness to the masses.
+What does our app do?
 
-:>>>>>**TODO**<<<<<<:
+### What does our app do?
+> We are investing ourselves in making people aware about the climate change problem using a weather app powered by a global neural model, which not only provides the weather conditions of a location across the globe but also suggests some easy modes of transportation that user can take, to get a lesser carbon footprint. We use a Neural Weather Forecasting model, FourCastNet model, that forecasts high-resolution timescale weather variables globally, and OpenAI APIs ( such as DALLE, GPT-3) and Text-To-Speech Problems to build the app.
 
+### Impact on Climate Change
+> Our weather app uses Weather FourcastNet model, which a NN-based weather forecast model and way more efficient than any other numerical weather models out there in the market, while having the same accuracy. The contribution to carbon footprint reduction is twofold. Inferring the neural model is >10,000x more efficient in terms of energy consumption than state-of-the-art weather models. Holistically, if we have 1M users, then and if we assume that 30% of people take the suggestions suggested by the model for just 1 kilometer, then we can reduce the carbon footprint by more than 30 tons.
 ## Usage
 
 ### Getting started 

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
+import gdown 
 
 # [MP] Fixed latitude and longitude range for ERA5 data
 LAT_RANGE = np.linspace(90, -90, 721)
@@ -64,6 +65,7 @@ def get_weather_data(weather_data_dir, lat, lon):
     return raw_variables, time_series, time_series_str
 
 
+
 def get_better_weather_data(weather_data_dir, lat, lon):
     target_variables = ['u10', 'v10', 't2m', 'tp', 'r850', 'sp']
 
@@ -93,8 +95,14 @@ def get_better_weather_data(weather_data_dir, lat, lon):
     time_idx = 0 # [MP] TODO: identify what time
     # the request is actually about! Right now we take
     # the first index (t=0) as dummy data.
+    
+    filename = weather_data_dir / 'single_week.h5'
+    # if file does not exist, download it from Google Drive with gdown
+    if not filename.exists():
+        print('Downloading weather data...')
+        gdown.download('https://drive.google.com/uc?id=1vbR1O3Zf1fWDazs8r5n-Uoa31OLeIKeS', output=str(filename), quiet=False)
 
-    f = h5py.File(weather_data_dir / 'single_week.h5', 'r')
+    f = h5py.File(filename, 'r')
 
     raw_variables = ''
     time_series = {}
@@ -105,27 +113,3 @@ def get_better_weather_data(weather_data_dir, lat, lon):
             time_series[var] = rescale(f[var][:, lat_idx, lon_idx], var)
 
     return raw_variables, time_series
-
-
-
-def plot_weather_time_series(time_series):
-    u, v, temp = time_series['u10'], time_series['v10'], time_series['t2m']
-
-    plt.rc('font', family='serif')
-
-    # 16 font size
-    plt.rcParams.update({'font.size': 18})
-
-    fig, axs = plt.subplots(2,1, figsize=(12, 6))
-    axs[0].scatter(np.arange(28), np.sqrt(u**2 + v**2), c='b', s=100, marker='2')
-    axs[0].set_title('Wind Speed [km/h]')
-    axs[0].set_xticks([0, 4, 8, 12, 16, 20, 24, 28])
-    axs[0].set_xticklabels(['0', '1', '2', '3', '4', '5', '6', '7'])
-
-    axs[1].scatter(np.arange(28), temp, c='r', s=100, marker='2')
-    axs[1].set_title('Temperature [C]')
-    axs[1].set_xticks([0, 4, 8, 12, 16, 20, 24, 28])
-    axs[1].set_xticklabels(['0', '1', '2', '3', '4', '5', '6', '7'])
-
-    plt.tight_layout()
-    return fig

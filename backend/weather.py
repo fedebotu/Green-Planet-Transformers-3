@@ -62,9 +62,52 @@ def get_weather_data(weather_data_dir, lat, lon):
     return raw_variables, time_series
 
 
+def get_better_weather_data(weather_data_dir, lat, lon):
+    target_variables = ['u10', 'v10', 't2m', 'tp', 'r850', 'sp']
+
+    # build dictionary of the above with their description and units in square brackets
+    # U wind component = eastward wind 
+    # V wind component = northward wind
+    variables = {'u10': 'Eastward wind  [km/h]',
+                'v10': 'Northward wind [km/h]',
+                't2m': 'Surface temperature [°C]',
+                'tp': 'Total precipitation [mm]',
+                'r850': 'Relative humidity [%]',
+                'sp': 'Surface pressure [hPa]'}
+
+    # Convert from m/s to km/h, and kelvin to celsius
+    conversion_factors = {  'u10': {'factor': 3.6, 'offset': 0},
+                            'v10': {'factor': 3.6, 'offset': 0},
+                            't2m': {'factor': 1, 'offset': -273.15},
+                            'tp': {'factor': 1, 'offset': 0},
+                            'r850': {'factor': 1, 'offset': 0},
+                            'sp': {'factor': 0.01, 'offset': 0}}
+
+    def rescale(x, var):
+        return x * conversion_factors[var]['factor'] + conversion_factors[var]['offset']
+
+    # get the closest pixel
+    lat_idx, lon_idx = get_closest_pixel(lat, lon)
+    time_idx = 0 # [MP] TODO: identify what time
+    # the request is actually about! Right now we take
+    # the first index (t=0) as dummy data.
+
+    f = h5py.File(weather_data_dir / 'single_week.h5', 'r')
+
+    raw_variables = ''
+    time_series = {}
+    for var in f.keys():
+        # add to prompt with value
+        if var in target_variables:
+            raw_variables += "{} is {:.1f}\n".format(variables[var], rescale(f[var][time_idx, lat_idx, lon_idx], var))
+            time_series[var] = rescale(f[var][:, lat_idx, lon_idx], var)
+
+    return raw_variables, time_series
+
+
 
 def plot_weather_time_series(time_series):
-    u, v, temp = time_series[8], time_series[12], time_series[4]
+    u, v, temp = time_series['u10'], time_series['v10'], time_series['t2m']
 
     plt.rc('font', family='serif')
     
@@ -73,11 +116,11 @@ def plot_weather_time_series(time_series):
 
     fig, axs = plt.subplots(2,1, figsize=(12, 6))
     axs[0].scatter(np.arange(28), np.sqrt(u**2 + v**2), c='b', s=100, marker='2')
-    axs[0].set_title('Wind Speed [m/s]')
+    axs[0].set_title('Wind Speed [km/h]')
     axs[0].set_xticks([0, 4, 8, 12, 16, 20, 24, 28])
     axs[0].set_xticklabels(['0', '1', '2', '3', '4', '5', '6', '7'])
 
-    axs[1].scatter(np.arange(28), temp - 273.15, c='r', s=100, marker='2')
+    axs[1].scatter(np.arange(28), temp, c='r', s=100, marker='2')
     axs[1].set_title('Temperature [C]')
     axs[1].set_xticks([0, 4, 8, 12, 16, 20, 24, 28])
     axs[1].set_xticklabels(['0', '1', '2', '3', '4', '5', '6', '7'])

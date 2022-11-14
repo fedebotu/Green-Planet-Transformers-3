@@ -75,7 +75,13 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
 def parse_location(loc):
     city, state, country_code = None, None, None
     st.write(loc)
-    if loc.count(",") == 2 and " is " not in loc:
+    if " is " not in loc:
+        try:
+            _, loc = loc.split("The city is")
+            city, loc = loc.split(", the state is")
+            state, country_code = loc.split(", and the country is the")
+        except: pass
+    else:
         location = loc.split(",")
         if len(location) == 1:
             city = location[0]
@@ -86,12 +92,6 @@ def parse_location(loc):
         elif len(location) == 3:
             city, state, country_code = location[0], location[1], location[2]
             st.write(f"I think you are asking about: {city}, {state}, {country_code}")
-    else: # Hacky for improper returns from GPT3
-        try:
-            _, loc = loc.split("The city is")
-            city, loc = loc.split(", the state is")
-            state, country_code = loc.split(", and the country is the")
-        except: pass
     return city, state, country_code
 
 city, state, country_code = parse_location(loc)
@@ -154,8 +154,7 @@ except:
 
 
 st.write(f'{current_time}')
-st.write(f"Location: {city}, {state}, {country_code} ,   Time: {hours} hours in the future")
-
+st.write(f"Location: {loc},   Time: {hours} hours in the future")
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
 

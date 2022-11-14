@@ -1,9 +1,6 @@
 from pathlib import Path
 import requests
-import pytz
-from datetime import datetime
 
-import re
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,24 +8,24 @@ import h5py
 import openai
 
 from backend.brian import fetch_brian
-from backend.weather import get_better_weather_data, plot_weather_time_series
-from backend.geoloc import geocode, reverse_geocode, get_timezone, parse_location
+from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
 from backend.dalle import generate_illustration
 
-
 # [MP] this should probably be a script argument
-openai.api_key = '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'
+openai.api_key = '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' 
 
 
 ######## Part 1: real-time audio (question) to text.
 
 # [MP] Placeholder
 st.title("Ask MelXior a weather question!")
-original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow morning. Will it rain?")
+original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow. Will it rain there?")
 
 
 ######## Part 2: text to text (identify location).
 
+# [MP] We need a robust way to filter the question and extract the location. 
+# For now, we'll assume the query is about a location in the US.
 context = original_question
 prompt = f"{original_question} Ignore the previous question. \
     What city does the above refer to? What state does the above refer to? What country does it refer to? \
@@ -45,83 +42,46 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
+loc = response['choices'][0]['text']
 
-loc = response['choices'][0]['text'].strip() # [MP] ignore newlines at the start
+st.write(f"I think you are asking about: {loc}")
+city, state, country = loc.split(",")
 
-# setting default location, when it is not specific
-if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
-    or ('question is too vague' in loc) or ('city is unknown' in loc)\
-    or ('city is Tomorrow' in loc):
-    prompt = f"{original_question} Ignore the previous question. \
-    I set my default location to San Francisco, CA, United States. What state does the above refer to? What country does it refer to? \
-    Respond with city, state, country:"
 
-    response = openai.Completion.create(
-        model="text-davinci-002",
-        prompt=prompt,
-        temperature=0,
-        max_tokens=1000,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-        stop=[" Human:", " AI:"] #\n
-    )
+# Get the coordinates 
+API_KEY = "e83b3c4c08285bf87b99f9bbc0abe3f0" # need to wait for activation
 
-    loc = response['choices'][0]['text'][2:]
+def geocode(    city=None, 
+                state=None, 
+                country_code=None, 
+                limit=5, 
+                api_key=API_KEY):
+    """
+    Given a city, state, and country, return the latitude and longitude and other data
+    """
 
-city, state, country_code = parse_location(loc)
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
+    
+    # get the response
+    response = requests.get(url)
+    data = eval(response.text)[0]
+    return data
 
-data = geocode(city=city, state=state, country_code=country_code)
+data = geocode(city=city, state=state, country_code=country)
 lat, lon = data['lat'], data['lon']
-
-# Extract time
-timezone = get_timezone(lat, lon)
-
-cur = datetime.now(pytz.timezone(timezone))
-current_date = cur.strftime("%Y-%m-%d")
-current_time = cur.strftime("%I:%M %p")
-
-context = original_question
-prompt = f"""It is {current_time}. 
-    {original_question} How many hours from now does my question refer to?"""
-
-response = openai.Completion.create(
-    model="text-davinci-002",
-    prompt=prompt,
-    temperature=0.6,
-    max_tokens=1000,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0,
-    stop=[" Human:", " AI:"] #\n
-)
-
-hours = response['choices'][0]['text'].strip()
-try:
-    hours = int(re.findall(r'\d+', hours)[0])
-except:
-    hours = 0
-
-
-st.write(f"Location: {loc},   Time: {hours} hours in the future")
-st.write(f"Current datetime: {current_time, current_date}")
-
-data = geocode(city=city, state=state, country_code=country_code)
-lat, lon = data['lat'], data['lon']
-
 
 ########  Part 3: get the weather forecast
 
 data_dir = Path('./data/era5/')
-raw_variables, time_series = get_better_weather_data(data_dir, lat, lon)
+raw_variables, time_series = get_weather_data(data_dir, lat, lon)
 
 
-final_prompt = raw_variables + f"\n Given the above information, {original_question}. Elaborate on the answer."
+final_prompt = raw_variables + f"\n Given the above information, {original_question}"
 
 response = openai.Completion.create(
     model="text-davinci-002",
     prompt=final_prompt,
-    temperature=0.8,
+    temperature=0,
     max_tokens=1000,
     top_p=1,
     frequency_penalty=0,
@@ -129,30 +89,30 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-response = response['choices'][0]['text'].strip()
+response = response['choices'][0]['text']
 
-# prompt_explainer = f"{raw_variables} {response} Why is this true?"
+prompt_explainer = f"{raw_variables} {response} Why is this true?"
 
-# response_explainer = openai.Completion.create(
-#     model="text-davinci-002",
-#     prompt=response,
-#     temperature=0,
-#     max_tokens=1000,
-#     top_p=1,
-#     frequency_penalty=0,
-#     presence_penalty=0,
-#     stop=[" Human:", " AI:"]
-# )
+response_explainer = openai.Completion.create(
+    model="text-davinci-002",
+    prompt=response,
+    temperature=0,
+    max_tokens=1000,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=[" Human:", " AI:"] 
+)
 
-# response_explainer = response_explainer['choices'][0]['text'].strip()
+response_explainer = response_explainer['choices'][0]['text']
 
 
-weather_explainer = f"{raw_variables}. Summarize the weather. What should you wear? How should you prepare? Based on the weather, is it better to walk, bike, drive or take public transportation?"
+weather_explainer = f"{raw_variables}. What can we say about the weather given the above information?"
 
 weather_explainer = openai.Completion.create(
     model="text-davinci-002",
     prompt=weather_explainer,
-    temperature=0.8,
+    temperature=0.4,
     max_tokens=1000,
     top_p=1,
     frequency_penalty=0,
@@ -160,7 +120,7 @@ weather_explainer = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-weather_explainer = weather_explainer['choices'][0]['text'].strip()
+weather_explainer = weather_explainer['choices'][0]['text']
 
 
 
@@ -168,27 +128,18 @@ weather_explainer = weather_explainer['choices'][0]['text'].strip()
 
 session = requests.Session()
 
-funny_mode = "funny meme" in original_question.lower()
 
-
-st.subheader("MelXior's summary:")
-st.write(f"{weather_explainer}")
-audio = fetch_brian(session, weather_explainer, funny_mode=funny_mode)
+audio = fetch_brian(session, weather_explainer + response, funny_mode=True)
 st.audio(audio, format="audio/wav")
 
-st.subheader("MelXior's response:")
-st.write(f"{response}")
-audio = fetch_brian(session, response, funny_mode=funny_mode)
-st.audio(audio, format="audio/wav")
 
-st.subheader("Weather predictions")
-#image = plt.imread("./assets/earth.png")
+image = plt.imread("./assets/earth.png")
 fig = plot_weather_time_series(time_series)
 
-st.pyplot(fig=fig,  clear_figure=True)
-st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
-#st.image(image, width=400)
 
+st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
+#st.image(image, caption="MelXior")
 
 ## Part 5 Generate the weather summary again (add city to the prompt) using GPT3 and return an image from Dalle
 prompt = f"{weather_explainer} in the city of {city}. Summarize this."

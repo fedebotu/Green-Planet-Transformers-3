@@ -51,6 +51,7 @@ def get_weather_data(weather_data_dir, lat, lon):
 
     raw_variables = ''
     time_series = []
+    time_series_str = ''
     for var in f.keys():
         # add to prompt with value
         if var in ['u10', 'v10', 'sp', 't2m', 'r850', 'mslp', 't850', 'u1000', \
@@ -58,8 +59,9 @@ def get_weather_data(weather_data_dir, lat, lon):
                 'z50', 'r500', 'tcwv']:
             raw_variables += f[var].attrs['description'] + " is: {:.2f} \n".format(f[var][time_idx, lat_idx, lon_idx])
             time_series.append(f[var][:, lat_idx, lon_idx])
+            time_series_str += f[var].attrs['description'] + " is:" + str(list(f[var][:10, lat_idx, lon_idx])) + "\n"
 
-    return raw_variables, time_series
+    return raw_variables, time_series, time_series_str
 
 
 def get_better_weather_data(weather_data_dir, lat, lon):
@@ -110,7 +112,7 @@ def plot_weather_time_series(time_series):
     u, v, temp = time_series['u10'], time_series['v10'], time_series['t2m']
 
     plt.rc('font', family='serif')
-    
+
     # 16 font size
     plt.rcParams.update({'font.size': 18})
 

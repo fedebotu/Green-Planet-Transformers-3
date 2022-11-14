@@ -2,13 +2,16 @@ import requests
 import numpy as np
 import pytz
 import streamlit as st
+import os
 
 from datetime import datetime
 from timezonefinder import TimezoneFinder
 
-
 # Openweatherdata personal key, use it at will it's free
-API_KEY = "e83b3c4c08285bf87b99f9bbc0abe3f0" # need to wait for activation
+try:
+    API_KEY = os.environ["OPENWEATHERMAP_API_KEY"]
+except:
+    API_KEY = None
 
 
 def geocode(city=None, state=None, country_code=None, limit=5, api_key=API_KEY):
@@ -31,12 +34,11 @@ def geocode(city=None, state=None, country_code=None, limit=5, api_key=API_KEY):
 def reverse_geocode(  lat=0,
                       lon=0,
                       return_full_response=False,
-                      api_key=None):
+                      api_key=API_KEY):
     """
     Given a latitude and longitude, return the city, state, and country code
     """
-    api_key = API_KEY if api_key is None else api_key
-    url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
+    url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={api_key}"
     response = requests.get(url)
     if return_full_response:
         return response

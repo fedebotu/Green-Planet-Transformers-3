@@ -19,7 +19,7 @@ def geocode(city=None, state=None, country_code=None, limit=5, api_key=API_KEY):
         url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
     elif city and country_code:
         url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit={limit}&appid={api_key}"
-    elif city:
+    else:
         url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit={limit}&appid={api_key}"
 
     # get the response

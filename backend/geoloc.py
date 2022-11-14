@@ -11,16 +11,20 @@ def geocode(    city=None,
                 state=None, 
                 country_code=None, 
                 limit=5, 
-                return_full_response=False,
-                api_key=None):
+                api_key=API_KEY):
     """
     Given a city, state, and country, return the latitude and longitude and other data
     """
-    api_key = API_KEY if api_key is None else api_key
-    url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
+
+    if city and state and country_code:
+        url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
+    elif city and country_code: 
+        url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit={limit}&appid={api_key}"
+    elif city: 
+        url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit={limit}&appid={api_key}"
+    
+    # get the response
     response = requests.get(url)
-    if return_full_response:
-        return response
     data = eval(response.text)[0]
     return data
 

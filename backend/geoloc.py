@@ -24,17 +24,7 @@ def geocode(city=None, state=None, country_code=None, limit=5, api_key=API_KEY):
 
     # get the response
     response = requests.get(url)
-    try:
-        data = eval(response.text)[0]
-    except:
-        
-        url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit={limit}&appid={api_key}"
-        response = requests.get(url)
-
-        # extract city and country 
-        city = city.split()
-        
-        data = eval(response.text)[0]
+    data = eval(response.text)[0]
     return data
 
 
@@ -52,6 +42,25 @@ def reverse_geocode(  lat=0,
         return response
     data = eval(response.text)[0]
     return data
+
+
+def parse_location(loc):
+    city, state, country_code = None, None, None
+    if " is " in loc:
+        try:
+            _, loc = loc.split("The city is")
+            city, loc = loc.split(", the state is")
+            state, country_code = loc.split(", and the country is the")
+        except: pass
+    else:
+        location = loc.split(",")
+        if len(location) == 1:
+            city = location[0]
+        elif len(location) == 2:
+            city, country_code = location[0], location[1]
+        elif len(location) == 3:
+            city, state, country_code = location[0], location[1], location[2]
+    return city, state, country_code
 
 
 # Get latitudes and longitudes with the same shape as the data

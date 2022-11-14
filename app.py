@@ -28,7 +28,7 @@ build_dir = os.path.join(parent_dir, "streamlit_audio_recorder/st_audiorec/front
 
 # [MP] Placeholder
 st.title("Ask MelXior a weather question!")
-original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow at 10 AM. Will it rain?")
+original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow morning. Will it rain?")
 
 ######## Part 2: text to text (identify location).
 loc = prompt_location_from_user_input(original_question)
@@ -69,15 +69,15 @@ final_prompt = raw_variables + f"\n Given the above information, {original_quest
 response = default_prompt(final_prompt)
 response = response['choices'][0]['text'].strip()
 
-prompt_explainer = f"{raw_variables} {response} Why is this true?"
-response_explainer = default_prompt(prompt_explainer).strip()
-response_explainer = response_explainer['choices'][0]['text']
+# prompt_explainer = f"{raw_variables} {response} Why is this true?"
+# response_explainer = default_prompt(prompt_explainer).strip()
+# response_explainer = response_explainer['choices'][0]['text']
 
 weather_explainer = f"{time_series_str}. What can we say about the weather given the above information? What should you wear? How should you prepare? Based on the weather, should you walk, bike, drive or take public transportation?"
 weather_explainer = openai.Completion.create(
     model="text-davinci-002",
     prompt=weather_explainer,
-    temperature=0.4,
+    temperature=0.8,
     max_tokens=1000,
     top_p=1,
     frequency_penalty=0,
@@ -93,12 +93,20 @@ session = requests.Session()
 funny_mode = "funny meme" in original_question.lower()
 
 
-audio = fetch_brian(session, weather_explainer + response, funny_mode=funny_mode)
+st.subheader("MelXior's summary:")
+st.write(f"{weather_explainer}")
+audio = fetch_brian(session, weather_explainer, funny_mode=funny_mode)
 st.audio(audio, format="audio/wav")
 
+st.subheader("MelXior's response:")
+st.write(f"{response}")
+audio = fetch_brian(session, response, funny_mode=funny_mode)
+st.audio(audio, format="audio/wav")
+
+st.subheader("Weather predictions")
 image = plt.imread("./assets/earth.png")
 fig = plot_weather_time_series(time_series)
 
-# st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
 st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
-st.image(image, caption="MelXior")
+st.image(image, caption="MelXior", width=400)

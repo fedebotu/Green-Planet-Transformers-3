@@ -9,11 +9,9 @@ str1 = """ᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾLᴾᴾᴾᴾᴾᴾᴾᴾᴾ
     ᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾᴾLLLLLLLLLLLLLLLLLLLL"""
 
 
-
 def fetch_brian(session, text, funny_mode=False):
     if funny_mode:
-        if "fun" in text:
-            text = str1
+        text = str1
 
     url = f"https://api.streamelements.com/kappa/v2/speech?voice=Brian&text={text}"
     response = session.get(url)

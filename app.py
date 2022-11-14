@@ -1,6 +1,9 @@
 from pathlib import Path
 import requests
+import pytz
+from datetime import datetime
 
+import re
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +12,8 @@ import openai
 
 from backend.brian import fetch_brian
 from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
+from backend.geoloc import geocode, reverse_geocode, get_timezone
+
 
 # [MP] this should probably be a script argument
 openai.api_key = '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' 
@@ -41,33 +46,49 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-loc = response['choices'][0]['text']
+# [MP] ignore newlines at the start
+loc = response['choices'][0]['text'][2:]
 
-st.write(f"I think you are asking about: {loc}")
 city, state, country = loc.split(",")
-
-
-# Get the coordinates 
-API_KEY = "e83b3c4c08285bf87b99f9bbc0abe3f0" # need to wait for activation
-
-def geocode(    city=None, 
-                state=None, 
-                country_code=None, 
-                limit=5, 
-                api_key=API_KEY):
-    """
-    Given a city, state, and country, return the latitude and longitude and other data
-    """
-
-    url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
-    
-    # get the response
-    response = requests.get(url)
-    data = eval(response.text)[0]
-    return data
-
 data = geocode(city=city, state=state, country_code=country)
 lat, lon = data['lat'], data['lon']
+
+# Extract time
+timezone = get_timezone(lat, lon)
+
+current_time = datetime.now(pytz.timezone(timezone))
+current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+
+
+context = original_question
+prompt = f"{original_question} Ignore the previous question. \
+    Given that it is now {current_time}, How many hours in the future does the above refer to? \
+    Respond with number of hours"
+
+response = openai.Completion.create(
+    model="text-davinci-002",
+    prompt=prompt,
+    temperature=0,
+    max_tokens=1000,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=[" Human:", " AI:"] #\n
+)
+
+hours = response['choices'][0]['text'][2:]
+try:
+    hours = int(re.findall(r'\d+', hours)[0])
+except:
+    hours = 0
+
+
+st.write(f'{current_time}')
+st.write(f"Location: {loc},   Time: {hours} hours in the future")
+
+
 
 ########  Part 3: get the weather forecast
 
@@ -127,8 +148,9 @@ weather_explainer = weather_explainer['choices'][0]['text']
 
 session = requests.Session()
 
+funny_mode = "funny meme" in original_question.lower()
 
-audio = fetch_brian(session, weather_explainer + response, funny_mode=True)
+audio = fetch_brian(session, weather_explainer + response, funny_mode=funny_mode)
 st.audio(audio, format="audio/wav")
 
 

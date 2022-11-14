@@ -11,12 +11,12 @@ import h5py
 import openai
 
 from backend.brian import fetch_brian
-from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
-from backend.geoloc import geocode, reverse_geocode, get_timezone
+from backend.weather import get_weather_data, plot_weather_time_series
+from backend.geoloc import geocode, reverse_geocode, get_timezone, parse_location
 
 
 # [MP] this should probably be a script argument
-openai.api_key = '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' 
+openai.api_key = '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'
 
 
 ######## Part 1: real-time audio (question) to text.
@@ -28,8 +28,6 @@ original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon 
 
 ######## Part 2: text to text (identify location).
 
-# [MP] We need a robust way to filter the question and extract the location. 
-# For now, we'll assume the query is about a location in the US.
 context = original_question
 prompt = f"{original_question} Ignore the previous question. \
     What city does the above refer to? What state does the above refer to? What country does it refer to? \
@@ -46,18 +44,17 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-# [MP] ignore newlines at the start
 
-loc = response['choices'][0]['text'][2:]
+loc = response['choices'][0]['text'].strip() # [MP] ignore newlines at the start
+st.write(f"Location: {loc}")
 
-## setting default location, when it is not specific
+# setting default location, when it is not specific
 if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
     or ('question is too vague' in loc) or ('city is unknown' in loc)\
     or ('city is Tomorrow' in loc):
     prompt = f"{original_question} Ignore the previous question. \
     I set my default location to San Francisco, CA, United States. What state does the above refer to? What country does it refer to? \
     Respond with city, state, country:"
-
 
     response = openai.Completion.create(
         model="text-davinci-002",
@@ -72,19 +69,7 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
 
     loc = response['choices'][0]['text'][2:]
 
-
-location = loc.split(",")
-
-city, state, country_code = None, None, None
-
-if len(location) == 1:
-    city = location[0]
-elif len(location) == 2:
-    city, country_code = location[0], location[1]
-elif len(location) == 3:
-    city, state, country_code = location[0], location[1], location[2]
-# [MP] Berlin, Berlin, Germany...
-
+city, state, country_code = parse_location(loc)
 
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
@@ -111,7 +96,7 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-hours = response['choices'][0]['text'][2:]
+hours = response['choices'][0]['text'].strip()
 try:
     hours = int(re.findall(r'\d+', hours)[0])
 except:
@@ -144,7 +129,7 @@ response = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-response = response['choices'][0]['text']
+response = response['choices'][0]['text'].strip()
 
 prompt_explainer = f"{raw_variables} {response} Why is this true?"
 
@@ -156,13 +141,13 @@ response_explainer = openai.Completion.create(
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0,
-    stop=[" Human:", " AI:"] 
+    stop=[" Human:", " AI:"]
 )
 
-response_explainer = response_explainer['choices'][0]['text']
+response_explainer = response_explainer['choices'][0]['text'].strip()
 
 
-weather_explainer = f"{raw_variables}. What can we say about the weather given the above information?"
+weather_explainer = f"{raw_variables}. What can we say about the weather given the above information? What should you wear? How should you prepare? Based on the weather, should you walk, bike, drive or take public transportation?"
 
 weather_explainer = openai.Completion.create(
     model="text-davinci-002",
@@ -175,7 +160,7 @@ weather_explainer = openai.Completion.create(
     stop=[" Human:", " AI:"] #\n
 )
 
-weather_explainer = weather_explainer['choices'][0]['text']
+weather_explainer = weather_explainer['choices'][0]['text'].strip()
 
 
 
@@ -184,6 +169,7 @@ weather_explainer = weather_explainer['choices'][0]['text']
 session = requests.Session()
 
 funny_mode = "funny meme" in original_question.lower()
+
 
 audio = fetch_brian(session, weather_explainer + response, funny_mode=funny_mode)
 st.audio(audio, format="audio/wav")
@@ -194,6 +180,5 @@ fig = plot_weather_time_series(time_series)
 
 
 st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
-
 st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
 st.image(image, caption="MelXior")

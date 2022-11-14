@@ -92,6 +92,7 @@ def get_currenttime(lat, lon):
     current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     return current_time
 
+
 def parse_location(loc):
     city, state, country_code = None, None, None
     st.write(loc)
@@ -113,6 +114,47 @@ def parse_location(loc):
             city, state, country_code = location[0], location[1], location[2]
             st.write(f"I think you are asking about: {city}, {state}, {country_code}")
     return city, state, country_code
+
+
+def get_closest_idxs(lat_idx, lon_idx, num_pixels=100, max_lon_idx=1440, max_lat_idx=721):
+    """
+    Given a 2D array, get the data indexes around a given location with a given number of pixels.
+    """
+    lat_min = lat_idx - int(num_pixels / 2)
+    lat_max = lat_idx + int(num_pixels / 2)
+    lon_min = lon_idx - num_pixels
+    lon_max = lon_idx + num_pixels
+
+    if lat_min < 0:
+        lat_min = 0
+    if lat_max > max_lat_idx:
+        lat_max = max_lat_idx
+    if lon_min < 0:
+        lon_min += max_lon_idx
+    if lon_max > max_lon_idx:
+        lon_max -= max_lon_idx
+
+    # Get indexes of the data
+    if lat_min < lat_max:
+        lat_idxs = np.arange(lat_min, lat_max)
+    else:
+        lat_idxs = np.concatenate((np.arange(lat_min, max_lat_idx), np.arange(0, lat_max)))
+
+    if lon_min < lon_max:
+        lon_idxs = np.arange(lon_min, lon_max)
+    else:
+        lon_idxs = np.concatenate((np.arange(lon_min, max_lon_idx), np.arange(0, lon_max)))
+    return lat_idxs, lon_idxs
+
+
+def get_closest_data_from_location(lat, lon, data, num_pixels=100, **kwargs):
+    """
+    Given a 2D array, get the data around a given location with a given number of pixels.
+    """
+    lat_idx, lon_idx = get_closest_pixel(lat, lon)
+    lat_idxs, lon_idxs = get_closest_idxs(lat_idx, lon_idx, num_pixels, **kwargs)
+    return data[lat_idxs, :][:, lon_idxs]
+
 
 if __name__ == "__main__":
     print(get_timezone(40.7128, -74.0060))

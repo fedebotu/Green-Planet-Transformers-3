@@ -18,7 +18,6 @@ from backend.gpt import generate_answer
 
 APP_NAME = "MelXior"
 
-
 # set app name
 st.set_page_config(page_title=APP_NAME, page_icon=":sunny:")
 
@@ -29,6 +28,16 @@ except:
     st.error(
         "You need to set your OpenAI API key in the environment variable OPENAI_API_KEY." \
         " For example, you can run `export OPENAI_API_KEY=sk-...` in your terminal."
+    )
+    st.stop()
+
+try:
+    openweather_api_key = os.environ["OPENWEATHERMAP_API_KEY"]
+except:
+    # Exception handling if OPENWEATHERMAP_API_KEY is not set
+    st.error(
+        "You need to set your OpenWeather API key in the environment variable OPENWEATHERMAP_API_KEY." \
+        " For example, you can run `export OPENWEATHERMAP_API_KEY=69420...` in your terminal."
     )
     st.stop()
 
@@ -61,7 +70,7 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
 
 city, state, country_code = parse_location(loc)
 
-data = geocode(city=city, state=state, country_code=country_code)
+data = geocode(city=city, state=state, country_code=country_code, api_key=openweather_api_key)
 lat, lon = data['lat'], data['lon']
 
 # Extract time
@@ -84,7 +93,7 @@ except:
 st.write(f"Location: {loc},   Time: {hours} hours in the future")
 # st.write(f"Current datetime: {current_time, current_date}")
 
-data = geocode(city=city, state=state, country_code=country_code)
+data = geocode(city=city, state=state, country_code=country_code, api_key=openweather_api_key)
 lat, lon = data['lat'], data['lon']
 
 
@@ -134,4 +143,17 @@ call_dalle_prompt = generate_answer(prompt, temperature=0.8)
 url = generate_illustration(call_dalle_prompt)
 
 # center the image
-st.image(url, caption=f"An artistic representation of {loc} by OpenAI's Dall-E")
+col1, col2, col3 = st.columns([1,6,1])
+with col1: st.write("")
+with col2: st.image(url, caption=f"An artistic representation of {loc} by OpenAI's Dall-E")
+with col3: st.write("")
+
+
+footer="""Notes: weather data is from ERA5, a global reanalysis dataset.
+        The data you see are predictions from historical data, 
+        given the difficulty to obtain real-time data and related inference needing GPUs.
+        However, the final plan is to extend this project to a real-time, neural prediction model!
+"""
+st.markdown(footer,unsafe_allow_html=True)
+
+st.markdown("""Developed with ❤ by the [Green-Planet-Transformers-3](https://github.com/fedebotu/Green-Planet-Transformers-3)""")

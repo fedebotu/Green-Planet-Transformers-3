@@ -75,7 +75,7 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
 def parse_location(loc):
     city, state, country_code = None, None, None
     st.write(loc)
-    if " is " not in loc:
+    if " is " in loc:
         try:
             _, loc = loc.split("The city is")
             city, loc = loc.split(", the state is")

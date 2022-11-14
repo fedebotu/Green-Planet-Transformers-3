@@ -5,6 +5,14 @@
 Repository for OpenAI's Climate Hackathon **Green-Planet-Tranformers-3**'s team, in alphabetical order: [Federico Berto](https://fedebotu.github.io/), [Jared Fernandez](https://www.jaredfern.com/), [Michael Poli](https://zymrael.github.io/), [Sarthak Arora](https://sarthakvarora.github.io/) and [Sumedha Khatter](https://www.linkedin.com/in/skhatter/)
 
 
+## Video
+
+https://user-images.githubusercontent.com/48984123/201657404-d4111b11-f0b4-43f2-82bb-4ab144a9a6fc.mp4
+
+
+
+
+
 ## MelXior
 ### Motivation
 > One of the biggest problems in solving a problem like Climate Change is the lack of the awareness about the problem. People have very minuscule knowledge about this problem and thus we are trying to build a solution that can help in creating awareness to the masses.

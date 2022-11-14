@@ -11,7 +11,7 @@ from backend.brian import fetch_brian
 from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
 
 # [MP] this should probably be a script argument
-openai.api_key = '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' 
+openai.api_key = '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'
 
 
 ######## Part 1: real-time audio (question) to text.
@@ -23,7 +23,7 @@ original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon 
 
 ######## Part 2: text to text (identify location).
 
-# [MP] We need a robust way to filter the question and extract the location. 
+# [MP] We need a robust way to filter the question and extract the location.
 # For now, we'll assume the query is about a location in the US.
 context = original_question
 prompt = f"{original_question} Ignore the previous question. \
@@ -66,28 +66,37 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
     loc = response['choices'][0]['text']
 
 
-location = loc.split(",")
+def parse_location(loc):
+    city, state, country_code = None, None, None
+    st.write(loc)
+    if loc.count(",") == 2 and " is " not in loc:
+        location = loc.split(",")
+        if len(location) == 1:
+            city = location[0]
+            st.write(f"I think you are asking about: {city}")
+        elif len(location) == 2:
+            city, country_code = location[0], location[1]
+            st.write(f"I think you are asking about: {city}, {country_code}")
+        elif len(location) == 3:
+            city, state, country_code = location[0], location[1], location[2]
+            st.write(f"I think you are asking about: {city}, {state}, {country_code}")
+    else: # Hacky for improper returns from GPT3
+        try:
+            _, loc = loc.split("The city is")
+            city, loc = loc.split(", the state is")
+            state, country_code = loc.split(", and the country is the")
+    return city, state, country_code
 
-city, state, country_code = None, None, None
-if len(location) == 1:
-    city = location[0]
-    st.write(f"I think you are asking about: {city}")
-elif len(location) == 2:
-    city, country_code = location[0], location[1]
-    st.write(f"I think you are asking about: {city}, {country_code}")
-elif len(location) == 3:
-    city, state, country_code = location[0], location[1], location[2]
-    st.write(f"I think you are asking about: {city}, {state}, {country_code}")
+city, state, country_code = parse_location(loc)
 
 
-
-# Get the coordinates 
+# Get the coordinates
 API_KEY = "e83b3c4c08285bf87b99f9bbc0abe3f0" # need to wait for activation
 
-def geocode(    city=None, 
-                state=None, 
-                country_code=None, 
-                limit=5, 
+def geocode(    city=None,
+                state=None,
+                country_code=None,
+                limit=5,
                 api_key=API_KEY):
     """
     Given a city, state, and country, return the latitude and longitude and other data
@@ -95,11 +104,11 @@ def geocode(    city=None,
 
     if city and state and country_code:
         url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country_code}&limit={limit}&appid={api_key}"
-    elif city and country_code: 
+    elif city and country_code:
         url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit={limit}&appid={api_key}"
-    elif city: 
+    elif city:
         url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit={limit}&appid={api_key}"
-    
+
     # get the response
     response = requests.get(url)
     data = eval(response.text)[0]
@@ -140,13 +149,13 @@ response_explainer = openai.Completion.create(
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0,
-    stop=[" Human:", " AI:"] 
+    stop=[" Human:", " AI:"]
 )
 
 response_explainer = response_explainer['choices'][0]['text']
 
 
-weather_explainer = f"{raw_variables}. What can we say about the weather given the above information?"
+weather_explainer = f"{raw_variables}. What can we say about the weather given the above information? What should you wear? How should you prepare? Based on the weather, should you walk, bike, drive or take public transportation?"
 
 weather_explainer = openai.Completion.create(
     model="text-davinci-002",

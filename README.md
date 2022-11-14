@@ -33,7 +33,7 @@ To run this app locally, follow the steps:
 2. Create a virtual environment (`python3 -m venv venv && source venv/bin/activate`)
 2. Install the requirements by running `make install`
 3. Ensure your OpenAI API key is set as an environment variable `OPENAI_API_KEY` 
-(see best practices around API key safety [here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety))
+(see best practices around API key safety [here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)) as well as OpenWeatherMap's API key `OPENWEATHERMAP_API_KEY` (guide [here](https://openweathermap.org/api/geocoding-api))
 4. Run the [streamlit](https://streamlit.io/) app by running `make run`
 5. Open the app in your browser at `http://localhost:8501`
 

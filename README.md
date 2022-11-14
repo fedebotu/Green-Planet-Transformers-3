@@ -11,8 +11,6 @@ Repository for OpenAI's Climate Hackathon :>>>>>**TODO**<<<<<<: description
 
 ## Usage
 
-<div class="tenor-gif-embed" data-postid="20733328" data-share-method="host" data-aspect-ratio="1.11111" data-width="100%"><a href="https://tenor.com/view/placeholder-text-animated-word-gif-20733328">Placeholder Text GIF</a>from <a href="https://tenor.com/search/placeholder-gifs">Placeholder GIFs</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
-
 ### Getting started 
 
 To run this app locally, follow the steps:

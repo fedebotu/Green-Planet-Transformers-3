@@ -25,7 +25,17 @@ def geocode(    city=None,
     
     # get the response
     response = requests.get(url)
-    data = eval(response.text)[0]
+    try:
+        data = eval(response.text)[0]
+    except:
+        
+        url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit={limit}&appid={api_key}"
+        response = requests.get(url)
+
+        # extract city and country 
+        city = city.split()
+        
+        data = eval(response.text)[0]
     return data
 
 

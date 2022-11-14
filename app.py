@@ -23,7 +23,7 @@ openai.api_key = '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'
 
 # [MP] Placeholder
 st.title("Ask MelXior a weather question!")
-original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow. Will it rain there?")
+original_question = st.text_input("Enter text", "I wanted to go to Bryce Canyon tomorrow at 10 AM. Will it rain?")
 
 
 ######## Part 2: text to text (identify location).
@@ -47,6 +47,7 @@ response = openai.Completion.create(
 )
 
 # [MP] ignore newlines at the start
+
 loc = response['choices'][0]['text'][2:]
 
 ## setting default location, when it is not specific
@@ -75,31 +76,29 @@ if ('non-specific' in loc) or ('city is Tomorrow' in loc)\
 location = loc.split(",")
 
 city, state, country_code = None, None, None
+
 if len(location) == 1:
     city = location[0]
-    st.write(f"I think you are asking about: {city}")
 elif len(location) == 2:
     city, country_code = location[0], location[1]
-    st.write(f"I think you are asking about: {city}, {country_code}")
 elif len(location) == 3:
     city, state, country_code = location[0], location[1], location[2]
-    st.write(f"I think you are asking about: {city}, {state}, {country_code}")
+# [MP] Berlin, Berlin, Germany...
+
 
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
 
-
 # Extract time
 timezone = get_timezone(lat, lon)
 
-current_time = datetime.now(pytz.timezone(timezone))
-current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-
+cur = datetime.now(pytz.timezone(timezone))
+current_date = cur.strftime("%Y-%m-%d")
+current_time = cur.strftime("%I:%M %p")
 
 context = original_question
-prompt = f"{original_question} Ignore the previous question. \
-    Given that it is now {current_time}, How many hours in the future does the above refer to? \
-    Respond with number of hours"
+prompt = f"""The hour right now is {current_time}. 
+    {original_question} How many hours from now does my question refer to?"""
 
 response = openai.Completion.create(
     model="text-davinci-002",
@@ -119,8 +118,8 @@ except:
     hours = 0
 
 
-st.write(f'{current_time}')
 st.write(f"Location: {loc},   Time: {hours} hours in the future")
+st.write(f"Current datetime: {current_time, current_date}")
 
 data = geocode(city=city, state=state, country_code=country_code)
 lat, lon = data['lat'], data['lon']
@@ -195,5 +194,6 @@ fig = plot_weather_time_series(time_series)
 
 
 st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+
 st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
 st.image(image, caption="MelXior")

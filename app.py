@@ -13,6 +13,7 @@ import openai
 from backend.brian import fetch_brian
 from backend.weather import get_better_weather_data, plot_weather_time_series
 from backend.geoloc import geocode, reverse_geocode, get_timezone, parse_location
+from backend.dalle import generate_illustration
 
 
 # [MP] this should probably be a script argument
@@ -181,9 +182,25 @@ audio = fetch_brian(session, response, funny_mode=funny_mode)
 st.audio(audio, format="audio/wav")
 
 st.subheader("Weather predictions")
-image = plt.imread("./assets/earth.png")
+#image = plt.imread("./assets/earth.png")
 fig = plot_weather_time_series(time_series)
 
-st.pyplot(fig=fig, caption="measurements for next week", clear_figure=True)
+st.pyplot(fig=fig,  clear_figure=True)
 st.text(f"Weather data found: {raw_variables}\nCoordinates: {lat}, {lon}")
-st.image(image, caption="MelXior", width=400)
+#st.image(image, width=400)
+
+
+## Part 5 Generate the weather summary again (add city to the prompt) using GPT3 and return an image from Dalle
+prompt = f"{weather_explainer} in the city of {city}. Summarize this."
+call_dalle_prompt = openai.Completion.create(
+    model="text-davinci-002",
+    prompt=prompt,
+    temperature=0.8,
+    max_tokens=1000,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=[" Human:", " AI:"] #\n
+)
+url = generate_illustration(call_dalle_prompt['choices'][0]['text'].strip())
+st.image(url,width=400)

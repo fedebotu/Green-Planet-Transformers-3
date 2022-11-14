@@ -2,13 +2,11 @@
 
 [![build](https://github.com/fedebotu/Green-Planet-Transformers-3/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/fedebotu/Green-Planet-Transformers-3/actions/workflows/main.yml)
 
-Repository for OpenAI's Climate Hackathon
+Repository for OpenAI's Climate Hackathon **TODO: description**
 
-## Links 
-[Notion Page](https://peridot-earth-c37.notion.site/OpenAI-Climate-Hackaton-ccb50a88b0014fef8e4b2bf978dd2c69)
+## Usage
 
-
-## Getting started 
+### Getting started 
 
 To run this app locally, follow the steps:
 
@@ -20,7 +18,17 @@ To run this app locally, follow the steps:
 4. Run the [streamlit](https://streamlit.io/) app by running `make run`
 5. Open the app in your browser at `http://localhost:8501`
 
-s
+
+### Obtain FourCastNet prediction data
+
+Given that real time data in this format is not easily available and would require access to real-time meteorological data from the globe, we use predictions from historical data located under [`data`](/data/) for ease of use:
+- `sample.h5`: ~80 MB, contains all weather variables for the globe in one time slice
+- `single_week.h5`: ~2.4 GB, contains all weather variables for the globe for one week to [[download here](https://drive.google.com/file/d/1vbR1O3Zf1fWDazs8r5n-Uoa31OLeIKeS/view?usp=sharing)]
+
+> Note that when deployed in real time, the model needs to be run only once every 6 hours. We save inference predictions and then query them in our app, as in the files above to greatly speed up the pipeline!
+
+
+
 ### Install app requirements.txt
 
 If you encounter issues when installing `pyaudio`, run the following: `sudo apt install portaudio19-dev`.

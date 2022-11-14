@@ -28,7 +28,7 @@ To run this app locally, follow the steps:
 
 ### Obtain FourCastNet prediction data
 
-Given that real time data in this format is not easily available and would require access to real-time meteorological data from the globe, we use predictions from historical data located under [`data/era5`](/data/) for ease of use:
+Given that real time data in this format is not easily available and would require access to real-time meteorological data from the globe, we use predictions from historical data located under [`data/era5`](/data/era5) for ease of use:
 - `sample.h5`: ~80 MB, contains all weather variables for the globe in one time slice (provided in Repo)
 - `single_week.h5`: ~2.4 GB, contains all weather variables for the globe for one week to [[download here](https://drive.google.com/file/d/1vbR1O3Zf1fWDazs8r5n-Uoa31OLeIKeS/view?usp=sharing)]
 

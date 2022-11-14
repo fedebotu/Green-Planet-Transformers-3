@@ -13,7 +13,7 @@ import h5py
 import openai
 
 from backend.brian import fetch_brian
-from backend.geoloc import geocode, reverse_geocode, get_currenttime, parse_location
+from backend.geoloc import geocode, reverse_geocode, get_currenttime, parse_location, get_timezone
 from backend.prompting import default_prompt, prompt_location_from_user_input
 from backend.weather import get_closest_pixel, get_weather_data, plot_weather_time_series
 

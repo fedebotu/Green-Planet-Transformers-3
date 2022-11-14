@@ -7,3 +7,7 @@ sklearn
 pandas
 tqdm
 h5py
+ruamel.yaml
+timm
+wandb
+einops

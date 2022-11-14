@@ -1,8 +1,18 @@
 # FourCastNet
 
-This repository is cloned from [here](https://github.com/NVlabs/FourCastNet) and adapted to our OpenAI hackaton needs!
+This repository is cloned from [here](https://github.com/NVlabs/FourCastNet) and adapted to our OpenAI hackaton needs! 
 
-![nvidia](assets/nvidia.png) ![nersc](assets/nersc.png)
+We can obtain inference from the model as described below. Given that real time data in this format is not easily available and would require access to real-time meteorological data from the globe, we use predictions from historical data provided in the main directory for ease of use (so we don't need to run the model every time):
+- `sample.h5`: ~80 MB, contains all weather variables for the globe in one time slice (provided in the main directory under `data/era5`)
+- `single_week.h5`: ~2.4 GB, contains all weather variables for the globe for one week (download from Google Drive in main [README.md](../README.md) or follow `fourcastnet/notebooks/`).
+
+> Note that when deployed in real time, the model needs to be run only once every ~6 hours. We save inference predictions and then query them in our app, as in the files above!
+
+The description below is from the original repository to obtain predictions.
+
+---
+
+<!-- ![nvidia](assets/nvidia.png) ![nersc](assets/nersc.png) -->
 
 This repository contains the code used for "FourCastNet: A Global Data-driven High-resolution Weather Model using Adaptive Fourier Neural Operators" \[[paper](https://arxiv.org/abs/2202.11214)\]
 
